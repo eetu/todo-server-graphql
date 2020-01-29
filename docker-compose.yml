@@ -1,0 +1,15 @@
+version: '3'
+services:
+  db:
+    image: postgres:12.1
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=test
+    ports:
+      - '127.0.0.1:7432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: {}

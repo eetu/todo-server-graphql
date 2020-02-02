@@ -1,0 +1,16 @@
+{
+  "name": "todo-server-graphql",
+  "env": {
+    "NODE_ENV": "production",
+    "LOGGER_LEVEL": "info",
+    "JWT_SECRET": { "required": true }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql",
+      "options": {
+        "version": "12"
+      }
+    }
+  ]
+}

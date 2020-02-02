@@ -4,9 +4,9 @@ import * as pg from 'pg';
 import { makeSchemaAndPlugin } from 'postgraphile-apollo-server';
 
 const postGraphileOptions = {
-  enableCors: process.env.NODE_ENV !== 'prod',
+  enableCors: process.env.ENABLE_CORS === 'true',
   // watchPg: true,
-  graphiql: process.env.NODE_ENV !== 'prod',
+  graphiql: process.env.NODE_ENV !== 'production',
   enhanceGraphiql: true,
   jwtSecret: process.env.JWT_SECRET,
   jwtPgTypeIdentifier: 'todos_public.jwt_token',

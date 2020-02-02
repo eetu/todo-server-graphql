@@ -1,24 +1,40 @@
+import { ApolloServer } from 'apollo-server-express';
 import * as express from 'express';
-import postgraphile from 'postgraphile';
+import * as pg from 'pg';
+import { makeSchemaAndPlugin } from 'postgraphile-apollo-server';
 
-require('dotenv').config();
+const postGraphileOptions = {
+  enableCors: process.env.NODE_ENV !== 'prod',
+  // watchPg: true,
+  graphiql: process.env.NODE_ENV !== 'prod',
+  enhanceGraphiql: true,
+  jwtSecret: process.env.JWT_SECRET,
+  jwtPgTypeIdentifier: 'todos_public.jwt_token',
+  showErrorStack: true,
+  // pgDefaultRole: 'user_guest',
+  ignoreRBAC: false,
+};
 
-const app = express();
+const pgPool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
-app.use(
-  postgraphile(process.env.DATABASE_URL, 'public', {
-    enableCors: process.env.NODE_ENV !== 'prod',
-    watchPg: true,
-    graphiql: process.env.NODE_ENV !== 'prod',
-    enhanceGraphiql: true,
-    // jwtSecret: process.env.JWT_SECRET,
-    // jwtPgTypeIdentifier: 'public.jwt_token',
-    showErrorStack: true,
-    // pgDefaultRole: 'user_guest',
-    ignoreRBAC: false,
-  }),
-);
+async function main(): Promise<void> {
+  // See https://www.graphile.org/postgraphile/usage-schema/ for schema-only usage guidance
+  const { schema, plugin } = await makeSchemaAndPlugin(pgPool, 'todos', postGraphileOptions);
 
-app.listen(process.env.PORT);
+  // See https://www.apollographql.com/docs/apollo-server/api/apollo-server.html#ApolloServer
+  const server = new ApolloServer({
+    schema,
+    plugins: [plugin],
+  });
 
-process.stdout.write(`Server listening on port ${process.env.PORT}\n`);
+  const app = express();
+  server.applyMiddleware({ app });
+
+  app.listen({ port: process.env.PORT }, () =>
+    console.log(`Server ready at http://localhost:${process.env.PORT}${server.graphqlPath}`),
+  );
+}
+
+main();

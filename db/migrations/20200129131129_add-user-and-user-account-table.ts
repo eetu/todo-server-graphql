@@ -7,16 +7,17 @@ export async function up(knex: Knex): Promise<void> {
   `);
 
   // Public information of user
-  await knex.schema.createTable('user', table => {
+  await knex.schema.withSchema('todos').createTable('user', table => {
     table.bigIncrements('id').primary();
   });
 
   // Private information of user, passwd etc.
-  return knex.schema.withSchema('private').createTable('user_account', table => {
+  return knex.schema.withSchema('todos_private').createTable('user_account', table => {
     table
       .bigInteger('user_id')
       .primary()
-      .references('user.id')
+      .references('id')
+      .inTable('todos.user')
       .onDelete('cascade');
     table
       .string('username', 255)
@@ -28,6 +29,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.withSchema('private').dropTable('user_account');
-  return knex.schema.dropTable('user');
+  await knex.schema.withSchema('todos_private').dropTable('user_account');
+  return knex.schema.withSchema('todos').dropTable('user');
 }

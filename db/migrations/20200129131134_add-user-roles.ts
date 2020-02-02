@@ -11,45 +11,49 @@ export async function up(knex: Knex): Promise<void> {
     CREATE ROLE user_guest;
     GRANT user_guest to postgres, user_login;
 
-    GRANT USAGE ON SCHEMA public to user_login;
-    GRANT USAGE ON SCHEMA private to user_admin;
-    GRANT USAGE ON SCHEMA public to user_guest;
+    ALTER TABLE todos.user enable row level security;
+    ALTER TABLE todos_private.user_account enable row level security;
+    ALTER TABLE todos.todos enable row level security;
 
-    GRANT SELECT ON TABLE public.user TO user_login;
-    GRANT SELECT, DELETE, INSERT(message), UPDATE(message) ON TABLE public.todos TO user_login;
-    GRANT ALL ON TABLE public.user TO user_admin;
-    GRANT ALL ON TABLE private.user_account TO user_admin;
-    GRANT EXECUTE ON FUNCTION public.register(text, text) to user_guest; -- For function this is sufficient and no need for policy
+    GRANT USAGE ON SCHEMA todos to user_login;
+    GRANT USAGE ON SCHEMA todos_private to user_admin;
+    GRANT USAGE ON SCHEMA todos_public to user_guest;
 
-    CREATE POLICY select_user ON public.user FOR SELECT TO user_login USING (id = public.get_user_id());
-    CREATE POLICY update_user ON public.user FOR UPDATE TO user_login USING (id = public.get_user_id());
-    CREATE POLICY select_todos ON public.todos for SELECT TO user_login USING (true); -- Give access to all users to read all todos
-    CREATE POLICY insert_todos ON public.todos for INSERT TO user_login WITH CHECK (user_id = public.get_user_id()); -- Give access to every user to insert todos for themselves
-    CREATE POLICY update_todos ON public.todos FOR UPDATE TO user_login USING (user_id = public.get_user_id());
-    CREATE POLICY delete_todos ON public.todos FOR DELETE TO user_login USING (user_id = public.get_user_id());
-    CREATE POLICY select_all_user ON public.user for ALL TO user_admin USING (true); -- Give access to all user data to admin
+    GRANT SELECT ON TABLE todos.user TO user_login;
+    GRANT SELECT, DELETE, INSERT(message), UPDATE(message) ON TABLE todos.todos TO user_login;
+    GRANT ALL ON TABLE todos.user TO user_admin;
+    GRANT ALL ON TABLE todos_private.user_account TO user_admin;
+    GRANT EXECUTE ON FUNCTION todos_public.register(text, text) to user_guest; -- For function this is sufficient and no need for policy
+
+    CREATE POLICY select_user ON todos.user FOR SELECT TO user_login USING (id = todos_public.get_user_id());
+    CREATE POLICY update_user ON todos.user FOR UPDATE TO user_login USING (id = todos_public.get_user_id());
+    CREATE POLICY select_todos ON todos.todos for SELECT TO user_login USING (true); -- Give access to all users to read all todos
+    CREATE POLICY insert_todos ON todos.todos for INSERT TO user_login WITH CHECK (user_id = todos_public.get_user_id()); -- Give access to every user to insert todos for themselves
+    CREATE POLICY update_todos ON todos.todos FOR UPDATE TO user_login USING (user_id = todos_public.get_user_id());
+    CREATE POLICY delete_todos ON todos.todos FOR DELETE TO user_login USING (user_id = todos_public.get_user_id());
+    CREATE POLICY select_all_user ON todos.user for ALL TO user_admin USING (true); -- Give access to all user data to admin
   `);
 }
 
 export async function down(knex: Knex): Promise<void> {
   return knex.raw(`
-    DROP POLICY select_user ON public.user;
-    DROP POLICY update_user ON public.user;
-    DROP POLICY select_todos ON public.todos;
-    DROP POLICY insert_todos ON public.todos;
-    DROP POLICY update_todos ON public.todos;
-    DROP POLICY delete_todos ON public.todos;
-    DROP POLICY select_all_user ON public.user;
+    DROP POLICY select_user ON todos.user;
+    DROP POLICY update_user ON todos.user;
+    DROP POLICY select_todos ON todos.todos;
+    DROP POLICY insert_todos ON todos.todos;
+    DROP POLICY update_todos ON todos.todos;
+    DROP POLICY delete_todos ON todos.todos;
+    DROP POLICY select_all_user ON todos.user;
 
-    REVOKE EXECUTE ON FUNCTION public.register(text, text) FROM user_guest;
-    REVOKE ALL ON TABLE private.user_account FROM user_admin;
-    REVOKE ALL ON TABLE public.user FROM user_admin;
-    REVOKE SELECT, DELETE, INSERT(message), UPDATE(message) ON TABLE public.todos FROM user_login;
-    REVOKE SELECT ON TABLE public.user FROM user_login;
+    REVOKE EXECUTE ON FUNCTION todos_public.register(text, text) FROM user_guest;
+    REVOKE ALL ON TABLE todos_private.user_account FROM user_admin;
+    REVOKE ALL ON TABLE todos.user FROM user_admin;
+    REVOKE SELECT, DELETE, INSERT(message), UPDATE(message) ON TABLE todos.todos FROM user_login;
+    REVOKE SELECT ON TABLE todos.user FROM user_login;
 
-    REVOKE USAGE ON SCHEMA public FROM user_guest;
-    REVOKE USAGE ON SCHEMA private FROM user_admin;
-    REVOKE USAGE ON SCHEMA public FROM user_login;
+    REVOKE USAGE ON SCHEMA todos_public FROM user_guest;
+    REVOKE USAGE ON SCHEMA todos_private FROM user_admin;
+    REVOKE USAGE ON SCHEMA todos FROM user_login;
 
     REVOKE user_guest FROM postgres, user_login;
     DROP ROLE user_guest;

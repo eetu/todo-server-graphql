@@ -1,21 +1,20 @@
 import * as Knex from 'knex';
 
-import { onUpdateTrigger } from '../helpers';
-
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.createTable('todos', table => {
+  await knex.schema.withSchema('todos').createTable('todos', table => {
     table.bigIncrements('id').primary();
     table.text('message');
     table.timestamps(false, true);
     table
       .bigInteger('user_id')
-      .defaultTo(knex.raw('public.get_user_id()'))
-      .references('user.id')
+      .defaultTo(knex.raw('todos_public.get_user_id()'))
+      .references('id')
+      .inTable('todos.user')
       .onDelete('cascade');
   });
-  return knex.raw(onUpdateTrigger('todos'));
+  // return knex.raw(onUpdateTrigger('todos.todos'));
 }
 
 export async function down(knex: Knex): Promise<void> {
-  return knex.schema.dropTable('todos');
+  return knex.schema.withSchema('todos').dropTable('todos');
 }

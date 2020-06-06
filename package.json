@@ -27,7 +27,7 @@
     "prettier": "^1.19.1",
     "ts-node": "^8.6.2",
     "typescript": "^3.7.5",
-    "apollo-server": "^2.9.16",
+    "apollo-server": "^2.14.2",
     "apollo-server-express": "^2.9.16",
     "express": "^4.17.1",
     "graphql": "^14.6.0",
